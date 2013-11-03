@@ -5,11 +5,31 @@ var centroidWindow = ['1','2','3','4','5','6','7','8','9','10','11','12','13','1
 
 var template = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,100]
 
-var centroidNubmer = 100;
+var centroidNubmer = 10;
 var motifNumber = 498;
 var PROCESSING = false;
 var navSelect = -1;
 
+var currentTab = null;
+//type_1 is fp pattern
+//type_2 is motif pattern
+var main_navigate = ['type_1', 'type_2'];
+var sub_navigate = {
+	'type_1':[
+		{
+			id:'fp_cons', 
+			name: 'Footprint vs. Conservation',
+			mainFunc: test
+		},
+		{
+			id:'corr_overview', 
+			name: 'Correlation Overview',
+			mainFunc: correlation_overview
+		}]
+};
+function test(){
+	console.log("test");
+}
 $(document).ready(function(){
 	
 	renewDataFolder(function(){
@@ -21,16 +41,102 @@ $(document).ready(function(){
 	
 });
 
-var loading = false;
-function loadingSing(loadItem){
-	loading = !loading;
-	if(loading){
-		$("#graph_container").append("<div id='loading'><h3>Loading...</h3></div>");
-		
+
+/*
+	Side Panel Controller
+
+*/
+function loadingSign(block){
+
+	if(block){
+		//$("#graph_container").append("<div id='loading'><h3>Loading...</h3></div>");
+		$.blockUI({ message: '<h3>Loading ...</h3>' });
 	}else{
-		
+		$.unblockUI();
+	}
+}
+function refreshSidePanel(data){
+	//refresh sidepanel
+	$("#side_panel").append("<li class='nav-header'>fp Assignment</li>");
+	for(var i in type1_folder){
+		$("#side_panel").append("<li><a class='dataFolder1' href='#' id='"+type1_folder[i]+"'>"+type1_folder[i]+"</a></li>");
+	}
+	$("#side_panel").append("<li class='nav-header'>motif assignment</li>");
+	for(var i in type2_folder){
+		$("#side_panel").append("<li><a class='dataFolder2' href='#' id='"+type2_folder[i]+"'>"+type2_folder[i]+"</a></li>");
 		
 	}
+	//dynamically bind click event trigger
+	$("#side_panel li a").on('click', function(){
+		if(PROCESSING) return;
+		loadingSign(true);
+		$("#side_panel li ").removeClass('active');
+		$(this).parent().addClass('active');
+		PROCESSING = true;
+		console.log(this.id);
+		
+		
+		if($(this).attr('class') == 'dataFolder1'){
+			$.ajax({
+		        type: "GET",
+		        url: 'get_fp_to_template_assignment',
+		        data: {folderName: this.id},
+		        dataType: "json", 
+		    }).done(function(result){
+	        	if(result.error){
+		        	alert(result.error);
+		        	$("#graph_container").html("");
+		        	PROCESSING = false;
+		        	return false;
+	        	}
+	        	currentTab = main_navigate[0];	
+	        	currentData = result;
+	        	
+	        	
+	        	loadMainContent(currentTab);
+	        	insertResult_1CellSelect();
+	        	insertResult_1Graph();
+
+		   		//display the screen
+		   		loadingSign(false);				   		
+		        console.log(result);	
+		        PROCESSING = false;	
+		        	        
+		        
+	        });
+			
+			
+		}else if($(this).attr('class') == 'dataFolder2'){
+			$.ajax({
+		        type: "GET",
+		        url: 'get_motif_pattern_data',
+		        data: {folderName: this.id},
+		        dataType: "json",
+			}).done(function(result){
+	        	if(result.error){
+		        	alert(result.error);
+		        	$("#graph_container").html("");
+		        	PROCESSING = false;
+		        	return false;
+	        	}
+	        	currentTab = main_navigate[1];
+	        	currentData = result;
+	        	loadMainContent(currentTab);
+		   		insertResult_2CellSelect();
+		   		insertResult_2Graph();
+		   		
+		   		//display the screen
+		   		loadingSign(false);				   		
+		        console.log(result);	
+		        PROCESSING = false;			        
+		        
+		    });
+			
+		}
+		
+		return false;
+	
+	});
 }
 
 function renewDataFolder(callback){
@@ -39,247 +145,96 @@ function renewDataFolder(callback){
         type: "GET",
         url: 'get_data_folders',
         dataType: "json",
-        success: function(result) {
-        	type1_folder = [];
-        	type2_folder = [];
+    }).done(function(result) {
+    	type1_folder = [];
+    	type2_folder = [];
 
-			console.log(result);
-			for(var i=0; i<result.type1_folders.length;i++){
-				type1_folder.push(result.type1_folders[i]);
-			}
-			for(var i=0; i<result.type2_folders.length;i++){
-				type2_folder.push(result.type2_folders[i]);
-			}
-			
-			
-			//refresh sidepanel
-			$("#side_panel").append("<li class='nav-header'>fp Assignment</li>");
-			for(var i in type1_folder){
-				$("#side_panel").append("<li><a class='dataFolder1' href='#' id='"+type1_folder[i]+"'>"+type1_folder[i]+"</a></li>");
-			}
-			$("#side_panel").append("<li class='nav-header'>motif assignment</li>");
-			for(var i in type2_folder){
-				$("#side_panel").append("<li><a class='dataFolder2' href='#' id='"+type2_folder[i]+"'>"+type2_folder[i]+"</a></li>");
-				
-			}
-			
-			//dynamically bind click event trigger
-			$("#side_panel li a").on('click', function(){
-				if(PROCESSING) return;
-				$("#side_panel li ").removeClass('active');
-				$(this).parent().addClass('active');
-				PROCESSING = true;
-				console.log(this.id);
-				$("#graph_container").html('');
-				$("#graph_nav").html('');
-				
-				
-				if($(this).attr('class') == 'dataFolder1'){
-					$.ajax({
-				        type: "GET",
-				        url: 'get_fp_to_template_assignment',
-				        data: {folderName: this.id},
-				        dataType: "json",
-				        success: function(result){
-				        	if(result.error){
-					        	alert(result.error);
-					        	$("#graph_container").html("");
-					        	PROCESSING = false;
-					        	return false;
-				        	}
-				        	currentData = result;
-				        	
-				        	insertResult_1Nav();
-				        	$("#graph_container").append("<div id='graph_1_1' style='width:100%;'></div>");
-				        	$("#graph_container").append("<div class='empty' id='graph_1_2' style='width:100%; display:none;'></div>");
-				        	insertResult_1CellSelect();
-				        	insertResult_1Graph();
-
-					   		//display the screen
-					   		$("#loading").remove();
-					   		
-					        console.log(result);	
-					        PROCESSING = false;			        
-					        
-				        }
-				    });
-					
-					
-				}else if($(this).attr('class') == 'dataFolder2'){
-					$.ajax({
-				        type: "GET",
-				        url: 'get_motif_pattern_data',
-				        data: {folderName: this.id},
-				        dataType: "json",
-				        success: function(result){
-				        	if(result.error){
-					        	alert(result.error);
-					        	$("#graph_container").html("");
-					        	PROCESSING = false;
-					        	return false;
-				        	}
-				        	currentData = result;
-				        	
-				        
-					   		$("#graph_container").append("<div id='graph_2_1' style='width:100%;'></div>");
-				        	$("#graph_container").append("<div class='empty' id='graph_2_2' style='width:100%; display:none;'></div>");
-							insertResult_2CellSelect();
-					   		insertResult_2Graph();
-					   		$("#loading").remove();
-
-					        console.log(result);	
-					        PROCESSING = false;			        
-					        
-				        }
-				    });
-					
-				}
-				
-				return false;
-			
-			});
-			
-			
-			
-			callback();
-        },
-        error: function(xhr, ajaxOptions, thrownError) {
-            alert("Request to get data folders did not work:\n"+xhr.status);
-        }
+		console.log(result);
+		for(var i=0; i<result.type1_folders.length;i++){
+			type1_folder.push(result.type1_folders[i]);
+		}
+		for(var i=0; i<result.type2_folders.length;i++){
+			type2_folder.push(result.type2_folders[i]);
+		}
+		
+		refreshSidePanel();
+		callback();
+    }).fail(function(xhr, ajaxOptions, thrownError) {
+        alert("Request to get data folders did not work:\n"+xhr.status);
     });
-	
-	
-	
+
 }
 
-function insertResult_1Nav(){
+/*
+	Main content Navigation controller
+	pass in the type index so 
+		fp assignment = 1
+		motif assignment = 2
+	and 
+		default sub index = 1
+*/
+
+function loadMainContent(main_tab){
+	//clear content
+	$("#graph_container").html('');
 	$("#graph_nav").html('');
-	$("#graph_nav").append("<ul id='graph_1_nav' class='nav nav-pills'><li class='active'><a href='#' id='fp_cons'>Footprint vs. Conservation</a></li><li><a href='#' id='corr_overview'>Correlation Overview</a></li></ul>");
-	navSelect = $("#graph_1_nav li.active a").attr('id');
-
-	$("#graph_1_nav li a").on('click', function(){
-		if(navSelect == this.id) return false;
-		navSelect = this.id;
-		
-		$("#graph_1_nav li ").removeClass('active');
-		$(this).parent().addClass('active');
-		if(navSelect == 'fp_cons'){
-			$("#graph_1_1").css({"display":"block"});
-			$("#graph_1_2").css({"display":"none"});
-			
-		}else if(navSelect =='corr_overview'){
-			$("#graph_1_1").css({"display":"none"});
-			 $("#graph_1_2").css('display','block');
-			
-			
-			
+	
+	//get main content id
+	var index=-1;
+	if(main_tab === 'type_1') index = 1;
+	else if(main_tab=== 'type_2') index = 2;
+	
+	//load sub navigation
+	var list = ""
+	for(var i=0; i<sub_navigate[main_tab].length; i++){
+		if(i==0){
+			list+="<li class='active'><a href='#' id='"+sub_navigate[main_tab][i].id+"'>"+sub_navigate[main_tab][i].name+"</a></li>";
+		}else{
+			list+="<li><a href='#' id='"+sub_navigate[main_tab][i].id+"'>"+sub_navigate[main_tab][i].name+"</a></li>";
 		}
-		setTimeout( function() {
-			   switchResult_1Nav();
-			}, 200);
-	});
-	
-}
-
-var cellTypeIndex = {};
-function switchResult_1Nav(){
-	
-	if(navSelect == 'corr_overview'){
-		//initialize graph 1-2
-		if($("#graph_1_2").hasClass('empty')){
-			$("#graph_container #graph_1_2").append("<div id='loading'><h3>Loading...</h3></div>");
-			$("#graph_container #graph_1_2").append("<div id='celltypes_checkbox'><h4>Filter celltypes</h4></div><hr>");
-			$("#graph_container #graph_1_2").append("<div id='graph_1_2_corr' style='width:2500px; height:750px;'></div>");
-			
-			setTimeout( function() {
-				//insert checkbox
-				
-			
-			   corr_chart = new Highcharts.Chart({
-				    chart: {
-				        renderTo: 'graph_1_2_corr'
-				    },
-				     title: {
-			            text: 'Template Correlation'
-			        },
-			        xAxis: {
-			            categories: template
-			        },
-			        yAxis: { // Primary yAxis
-		
-		                title: {
-		                    text: 'correlation Level',
-		                    style: {color: '#4572A7'}
-		                }
-		            },
-		            tooltip: {
-		                shared: true
-		            },
-			        legend: {
-			            layout: 'vertical',
-			            align: 'right',
-			            verticalAlign: 'middle',
-			            borderWidth: 0
-			        },
-			        series: []
-				});
-				
-				var i=0;
-				$.each(currentData.data, function(key, val){
-					console.log(key);
-					cellTypeIndex[key] = i;
-					var series = {
-						lineWidth: 1,
-				        id: 'series',
-				        name: key,
-				        data: [],
-				        marker: {radius:2}
-				        }
-					$.each(currentData.data[key].correlation, function(key,val){
-						
-						series.data.push(parseFloat(val));
-			
-					});
-				
-					corr_chart.addSeries(series);
-					
-					$("#graph_1_2 #celltypes_checkbox").append("<label class='checkbox inline'><input type='checkbox' class='graph_1_2_checkbox' checked id='"+key+"'>"+key+"</label>");
-					i++;
-				});
-				
-				
-				//bind clck events to these checkboxes
-				$("#graph_1_2 #celltypes_checkbox .graph_1_2_checkbox").on('change', function() {
-					var checked = ($(this).is(':checked')) ? true : false;
-					var index = cellTypeIndex[this.id];
-					if(checked){
-						corr_chart.series[index].show();
-					}else{
-						
-						corr_chart.series[index].hide();
-					}
-					//alert(checked);
-				});
-				
-				
-				$("#graph_container #graph_1_2 #loading").remove();
-				$("#graph_1_2").removeClass('empty');
-			
-			}, 300);
-			
-			;/*
-			$.each(currentData.data[currentCell].conservationLevel[i].data, function(key,val){
-				conData.push(parseFloat(val));
-	
-			});*/
-			
-			
-						
-		}
-		
 	}
 	
+	$("#graph_nav").append("<ul id='graph_"+index+"_nav' class='nav nav-pills'>"+list+"</ul>");
+	
+	navSelect = $("#graph_"+index+"_nav li.active a").attr('id');
+	
+	//bind click event to sub navigation
+	
+	$("#graph_"+index+"_nav li a").on('click', function(){
+		var subNavIndex = -1;
+		if(navSelect == this.id) return false;
+		navSelect = this.id;
+		for(var i=0; i<sub_navigate[main_tab].length; i++){
+			if(sub_navigate[main_tab][i].id == navSelect){
+				subNavIndex = i;
+				break;
+			}
+		}
+		$("#graph_1_nav li ").removeClass('active');
+		$(this).parent().addClass('active');
+		$("#graph_container div").removeClass('show').addClass("hide");
+		$("#graph_"+index+"_"+(subNavIndex+1)).removeClass("hide").addClass('show');
+
+		setTimeout( function() {
+			loadingSign(true);
+			sub_navigate[main_tab][subNavIndex].mainFunc("graph_"+index+"_"+(subNavIndex+1))
+			.done(function(){
+				loadingSign(false);
+			})
+
+		}, 200);
+	});
+
+	//first load the correct subnav divs in main container
+	for(var i=0; i<sub_navigate[main_tab].length; i++){
+		if(i==0){
+			$("#graph_container").append("<div class='show' id='graph_"+index+"_"+(i+1)+"' style='width:100%;'></div>");
+		}else{
+			$("#graph_container").append("<div id='graph_"+index+"_"+(i+1)+"' style='width:100%; '></div>");
+		}
+	}
 }
+
 
 function insertResult_1CellSelect(){
 	
@@ -457,7 +412,6 @@ function insertResult_2CellSelect(){
 
 function insertResult_2Graph(){
 	
-	
 	//push 100 graph containers first
 	for(var i=0; i<motifNumber; i++){
 
@@ -547,8 +501,93 @@ function updateResult_2Graph(){
 		
 	}
 	
-	
+}
 
+
+
+
+
+/* Graphing Logic */
+function correlation_overview(div_id){
+	var cellTypeIndex;
+	var deferred = new $.Deferred();
+	$("#graph_container #"+div_id).append("<div id='celltypes_checkbox'><h4>Filter celltypes</h4></div><hr>");
+	$("#graph_container #"+div_id).append("<div id='corr' style='width:2500px; height:750px;'></div>");
 	
+	setTimeout( function() {
+		//insert checkbox
+		
+	   corr_chart = new Highcharts.Chart({
+		    chart: {
+		        renderTo: 'corr'
+		    },
+		     title: {
+	            text: 'Template Correlation'
+	        },
+	        xAxis: {
+	            categories: template
+	        },
+	        yAxis: { // Primary yAxis
+
+                title: {
+                    text: 'correlation Level',
+                    style: {color: '#4572A7'}
+                }
+            },
+            tooltip: {
+                shared: true
+            },
+	        legend: {
+	            layout: 'vertical',
+	            align: 'right',
+	            verticalAlign: 'middle',
+	            borderWidth: 0
+	        },
+	        series: []
+		});
+		
+		var i=0;
+		$.each(currentData.data, function(key, val){
+			console.log(key);
+			cellTypeIndex[key] = i;
+			var series = {
+				lineWidth: 1,
+		        id: 'series',
+		        name: key,
+		        data: [],
+		        marker: {radius:2}
+		        }
+			$.each(currentData.data[key].correlation, function(key,val){
+				series.data.push(parseFloat(val));
 	
+			});
+		
+			corr_chart.addSeries(series);
+			
+			$("#"+div_id+" #celltypes_checkbox").append("<label class='checkbox inline'><input type='checkbox' class='checkbox' checked id='"+key+"'>"+key+"</label>");
+			i++;
+		});
+	
+		//bind clck events to these checkboxes
+		$("#"+div_id+" #celltypes_checkbox .checkbox").on('change', function() {
+			var checked = ($(this).is(':checked')) ? true : false;
+			var index = cellTypeIndex[this.id];
+			if(checked){
+				corr_chart.series[index].show();
+			}else{
+				
+				corr_chart.series[index].hide();
+			}
+			//alert(checked);
+		});
+		
+		
+		//loadingSign(false);
+		//DONE:
+		deferred.resolve();
+		//$("#graph_1_2").removeClass('empty');
+	
+	}, 300);
+	return deferred;
+
 }
