@@ -42,198 +42,29 @@ class DataVisual:
 		    
 		return simplejson.dumps(dict(type1_folders=type1_folders, type2_folders=type2_folders))
 		
+		
 	#result 1 shows the template assignment
 	@cherrypy.expose()
-	def get_result_1_data(self, folderName):
-		folderPath = 'data/type1/'+folderName;
-		celltypes = []
-		for (dirpath, dirnames, filenames) in walk(folderPath):
-		    celltypes.extend(dirnames)
-		    break
-		#return simplejson.dumps(dict( type2_folders=celltypes))
-		
-		result=dict()
-		result['id'] = folderName
-		result['celltypes'] = celltypes
-		result['data'] = {}
-		result['templateSignal'] = []
-		#read template signal
-		centroid=0
-		index=0
-		templateData =[]
-		#read footprints
-		try:
-			templateFile = open(folderPath+'/templateSignal')
-			
-		except IOError:
-			return simplejson.dumps(dict(error='contect not found'))
-
-		for line in templateFile:	
-			if not line[0] == '"':
-				templateData.append(line.split()[1])
-				index = index+1
-				
-			##add centroid count
-			if index == 30:
-				result['templateSignal'].append({'name': 'template %d' %(centroid+1), 'data': templateData})
-				centroid = centroid +1
-				index = 0
-				templateData =[]
-
-
-		
-		for c in celltypes:
-			result['data'][c] ={}
-			
-		
-			result['data'][c]['correlation'] = []
-			result['data'][c]['count'] = []
-		
-			result['data'][c]['fpSignal'] = []
-			result['data'][c]['conservationLevel'] = []
-			
-			centroid=0;
-			index=0;
-			fpData =[]
-			#read footprints
-			fpFile = open(folderPath+'/'+c+'/fpsig')
-			for line in fpFile:	
-				if not line[0] == '"':
-					fpData.append(line.split()[1])
-					index = index+1
-					
-				##add centroid count
-				if index == 30:
-					result['data'][c]['fpSignal'].append({'name': 'footprint %d' %(centroid+1), 'data': fpData})
-					centroid = centroid +1
-					index = 0
-					fpData =[]
-		
-			#read conservation level	
-			centroid=0
-			index=0
-			consData = []
-			consFile = open(folderPath+'/'+c+'/consSig')
-			for line in consFile:	
-				if not line[0] == '"':
-					consData.append(line.split()[1])
-					index = index+1
-					
-				##add centroid count
-				if index == 30:
-					result['data'][c]['conservationLevel'].append({'name': 'conservation %d' %(centroid+1), 'data': consData})
-					centroid = centroid +1
-					index = 0
-					fpData =[]
-					consData = []
-			
-			
-		
-			#read correlation
-			corrFile = open(folderPath+'/'+c+'/cor-level.txt')
-			for line in corrFile:	
-				try:
-					result['data'][c]['correlation'].append(float(line))
-
-				except ValueError:
-					print "no"
-			
-			#read count
-			countFile = open(folderPath+'/'+c+'/'+c+'.count')
-			for line in countFile:	
-				try:
-					result['data'][c]['count'].append(float(line))
-
-				except ValueError:
-					print "no"
-					
-					
-							
-			
-		return simplejson.dumps(result)
+	def get_fp_to_template_assignment(self, folderName):
+		json_file=open('json_data/type1/'+folderName+'.json')
+		json_data = simplejson.load(json_file)
+		return simplejson.dumps(json_data)
 		
 	#result 2 shows the motif pattern (super similar to func for result 1 lol)
 	@cherrypy.expose()
-	def get_result_2_data(self, folderName):
-		folderPath = 'data/type2/'+folderName;
-		celltypes = []
-		for (dirpath, dirnames, filenames) in walk(folderPath):
-		    celltypes.extend(dirnames)
-		    break
-		#return simplejson.dumps(dict( type2_folders=celltypes))
-		
-		result=dict()
-		result['id'] = folderName
-		result['celltypes'] = celltypes
-		result['data'] = {}
-		#read template signal
-		centroid=0
-		index=0
-		
-		for c in celltypes:
-			result['data'][c] ={}
-			result['data'][c]['correlation'] = []
-			result['data'][c]['motif'] = []
-		
-			result['data'][c]['fpSignal'] = []
-			result['data'][c]['conservationLevel'] = []
-			
-			centroid=0;
-			index=0;
-			fpData =[]
-			#read footprints
-			fpFile = open(folderPath+'/'+c+'/fpsig')
-			for line in fpFile:	
-				if not line[0] == '"':
-					fpData.append(line.split()[1])
-					index = index+1
-					
-				##add centroid count
-				if index == 30:
-					result['data'][c]['fpSignal'].append({'name': 'footprint %d' %(centroid+1), 'data': fpData})
-					centroid = centroid +1
-					index = 0
-					fpData =[]
-		
-			#read conservation level	
-			centroid=0
-			index=0
-			consData = []
-			consFile = open(folderPath+'/'+c+'/consSig')
-			for line in consFile:	
-				if not line[0] == '"':
-					consData.append(line.split()[1])
-					index = index+1
-					
-				##add centroid count
-				if index == 30:
-					result['data'][c]['conservationLevel'].append({'name': 'conservation %d' %(centroid+1), 'data': consData})
-					centroid = centroid +1
-					index = 0
-					fpData =[]
-					consData = []
-			
-			
-		
-			#read correlation
-			corrFile = open(folderPath+'/'+c+'/cor-level.txt')
-			for line in corrFile:	
-				try:
-					result['data'][c]['correlation'].append(float(line))
+	def get_motif_pattern_data(self, folderName):
 
-				except ValueError:
-					print "no"
-			
-			#read count
-			countFile = open(folderPath+'/'+c+'/motifOrder.txt')
-			for line in countFile:	
-				if not line[0] == 'T':
-					result['data'][c]['motif'].append(line)
+		json_file=open('json_data/type2/'+folderName+'/'+folderName+'.json')
+		json_data = simplejson.load(json_file)
+		return simplejson.dumps(json_data)
+		
+	#result 3 shows the motif pattern that is motif-based
+	@cherrypy.expose()
+	def get_motif_pattern_across_cell(self, folderName):
 
-					
-							
-			
-		return simplejson.dumps(result)
+		json_file=open('json_data/type2/'+folderName+'/'+folderName+'_across_motifs.json')
+		json_data = simplejson.load(json_file)
+		return simplejson.dumps(json_data)
     
 def setup_routes(routes):
     d = cherrypy.dispatch.RoutesDispatcher()

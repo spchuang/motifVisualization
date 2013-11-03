@@ -21,6 +21,17 @@ $(document).ready(function(){
 	
 });
 
+var loading = false;
+function loadingSing(loadItem){
+	loading = !loading;
+	if(loading){
+		$("#graph_container").append("<div id='loading'><h3>Loading...</h3></div>");
+		
+	}else{
+		
+		
+	}
+}
 
 function renewDataFolder(callback){
 	$("#side_panel").html("");
@@ -61,12 +72,12 @@ function renewDataFolder(callback){
 				console.log(this.id);
 				$("#graph_container").html('');
 				$("#graph_nav").html('');
-				$("#graph_container").append("<div id='loading'><h3>Loading...</h3></div>");
+				
 				
 				if($(this).attr('class') == 'dataFolder1'){
 					$.ajax({
 				        type: "GET",
-				        url: 'get_result_1_data',
+				        url: 'get_fp_to_template_assignment',
 				        data: {folderName: this.id},
 				        dataType: "json",
 				        success: function(result){
@@ -82,10 +93,8 @@ function renewDataFolder(callback){
 				        	$("#graph_container").append("<div id='graph_1_1' style='width:100%;'></div>");
 				        	$("#graph_container").append("<div class='empty' id='graph_1_2' style='width:100%; display:none;'></div>");
 				        	insertResult_1CellSelect();
-				        	
 				        	insertResult_1Graph();
-				        	
-				       		
+
 					   		//display the screen
 					   		$("#loading").remove();
 					   		
@@ -99,7 +108,7 @@ function renewDataFolder(callback){
 				}else if($(this).attr('class') == 'dataFolder2'){
 					$.ajax({
 				        type: "GET",
-				        url: 'get_result_2_data',
+				        url: 'get_motif_pattern_data',
 				        data: {folderName: this.id},
 				        dataType: "json",
 				        success: function(result){
