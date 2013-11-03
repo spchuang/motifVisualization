@@ -18,7 +18,7 @@ var centroidWindow = ['1','2','3','4','5','6','7','8','9','10','11','12','13','1
 var template = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,100]
 */
 var centroidNubmer = 10;
-var motifNumber = 498;
+var motifNumber = 10;
 var PROCESSING = false;
 var navSelect = -1;
 
@@ -79,11 +79,12 @@ $(document).ready(function(){
 /*
 	Side Panel Controller
 */
-function loadingSign(block){
-
+function loadingSign(block, msg){
+	if(!msg)
+		msg =""
 	if(block){
 		//$("#graph_container").append("<div id='loading'><h3>Loading...</h3></div>");
-		$.blockUI({ message: '<h3>Loading ...</h3>' });
+		$.blockUI({ message: '<h3>Loading '+msg+'...</h3>' });
 	}else{
 		$.unblockUI();
 	}
@@ -447,9 +448,11 @@ function insertResult_2_2CellSelect(){
 	//$("#graph_container #graph_2_2").append("<label>correlation filter</label><input id='filter-corr' type='textbox'></input>");
 	
 	$("#graph_container #graph_2_2 #select-motif").on("change", function(){
-
+		
 		currentMotif = $(this).val();
+		loadingSign(true, currentMotif);
 		updateResult_2_2Graph();
+		loadingSign(false);
 		
 	});
 	currentMotif = $("#graph_container #select-motif option:selected").attr('id');
@@ -470,11 +473,14 @@ function insertResult_2_2Graph(){
 		
 		chart2.push(c);
 	}
+	loadingSign(true, currentMotif);
 	updateResult_2_2Graph();
+	loadingSign(false);
 	
 }
 
 function updateResult_2_2Graph(){
+	
 	console.log("update graph to "+currentMotif);
 	for(var i=0; i<currentData.data[currentMotif].length; i++){
 	
@@ -495,7 +501,7 @@ function updateResult_2_2Graph(){
 		$("#graph_container #graph_2_2_corr_"+i+" span").html(currentData.data[currentMotif][i].correlation);
 		
 	}
-	
+	//loadingSign(false);
 }
 
 /* Graphing Logic */
@@ -653,7 +659,7 @@ function motif_pattern_across_celltypes_graph(){
 /////HELPER FUNCTION
 //series: boolean
 function get_chart(renderDivID, title, category, hasSeries){
-console.log(renderDivID);
+
 	var series = [];
 	var yAxis = { 
                 title: {
