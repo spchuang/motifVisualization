@@ -42,6 +42,7 @@ class DataVisual:
 		    
 		return simplejson.dumps(dict(type1_folders=type1_folders, type2_folders=type2_folders))
 		
+	#result 1 shows the template assignment
 	@cherrypy.expose()
 	def get_result_1_data(self, folderName):
 		folderPath = 'data/type1/'+folderName;
@@ -146,6 +147,89 @@ class DataVisual:
 				except ValueError:
 					print "no"
 					
+					
+							
+			
+		return simplejson.dumps(result)
+		
+	#result 2 shows the motif pattern (super similar to func for result 1 lol)
+	@cherrypy.expose()
+	def get_result_2_data(self, folderName):
+		folderPath = 'data/type2/'+folderName;
+		celltypes = []
+		for (dirpath, dirnames, filenames) in walk(folderPath):
+		    celltypes.extend(dirnames)
+		    break
+		#return simplejson.dumps(dict( type2_folders=celltypes))
+		
+		result=dict()
+		result['id'] = folderName
+		result['celltypes'] = celltypes
+		result['data'] = {}
+		#read template signal
+		centroid=0
+		index=0
+		
+		for c in celltypes:
+			result['data'][c] ={}
+			result['data'][c]['correlation'] = []
+			result['data'][c]['motif'] = []
+		
+			result['data'][c]['fpSignal'] = []
+			result['data'][c]['conservationLevel'] = []
+			
+			centroid=0;
+			index=0;
+			fpData =[]
+			#read footprints
+			fpFile = open(folderPath+'/'+c+'/fpsig')
+			for line in fpFile:	
+				if not line[0] == '"':
+					fpData.append(line.split()[1])
+					index = index+1
+					
+				##add centroid count
+				if index == 30:
+					result['data'][c]['fpSignal'].append({'name': 'footprint %d' %(centroid+1), 'data': fpData})
+					centroid = centroid +1
+					index = 0
+					fpData =[]
+		
+			#read conservation level	
+			centroid=0
+			index=0
+			consData = []
+			consFile = open(folderPath+'/'+c+'/consSig')
+			for line in consFile:	
+				if not line[0] == '"':
+					consData.append(line.split()[1])
+					index = index+1
+					
+				##add centroid count
+				if index == 30:
+					result['data'][c]['conservationLevel'].append({'name': 'conservation %d' %(centroid+1), 'data': consData})
+					centroid = centroid +1
+					index = 0
+					fpData =[]
+					consData = []
+			
+			
+		
+			#read correlation
+			corrFile = open(folderPath+'/'+c+'/cor-level.txt')
+			for line in corrFile:	
+				try:
+					result['data'][c]['correlation'].append(float(line))
+
+				except ValueError:
+					print "no"
+			
+			#read count
+			countFile = open(folderPath+'/'+c+'/motifOrder.txt')
+			for line in countFile:	
+				if not line[0] == 'T':
+					result['data'][c]['motif'].append(line)
+
 					
 							
 			
