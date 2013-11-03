@@ -11,6 +11,7 @@ var PROCESSING = false;
 var navSelect = -1;
 
 var currentTab = null;
+var selectedFolder = null;
 //type_1 is fp pattern
 //type_2 is motif pattern
 var main_navigate = ['type_1', 'type_2'];
@@ -19,23 +20,27 @@ var sub_navigate = {
 		{
 			id:'fp_cons', 
 			name: 'Footprint vs. Conservation',
-			mainFunc: footprint_assignment_graph
+			mainFunc: footprint_assignment_graph,
+			processed: false
 		},
 		{
 			id:'corr_overview', 
 			name: 'Correlation Overview',
-			mainFunc: correlation_overview_graph
+			mainFunc: correlation_overview_graph,
+			processed: false
 		}],
 	'type_2':[
 		{
 			id:'motif_pattern',
 			name: 'Motif for each celltypes',
-			mainFunc: test
+			mainFunc: motif_pattern_graph,
+			processed: false
 		},
 		{
 			id:'motif_across_cell',
 			name: 'Motif across celltypes',
-			mainFunc: test
+			mainFunc: test,
+			processed: false
 			
 		}]
 };
@@ -73,6 +78,16 @@ function loadingSign(block){
 		$.unblockUI();
 	}
 }
+
+function clearProcessedState(){
+	if(!currentTab) return;
+	console.log("CLEAR");
+	console.dir(sub_navigate[currentTab]);
+	for(var i=0; i<sub_navigate[currentTab].length; i++){
+		sub_navigate[currentTab][i].processed = false;
+	}
+	
+}
 function refreshSidePanel(data){
 	//refresh sidepanel
 	$("#side_panel").append("<li class='nav-header'>fp Assignment</li>");
@@ -86,68 +101,27 @@ function refreshSidePanel(data){
 	}
 	//dynamically bind click event trigger
 	$("#side_panel li a").on('click', function(){
-		if(PROCESSING) return;
+		if(selectedFolder == this.id || PROCESSING) return;
+		
 		loadingSign(true);
 		$("#side_panel li ").removeClass('active');
 		$(this).parent().addClass('active');
+		
 		PROCESSING = true;
-		console.log(this.id);
+		selectedFolder = this.id;
+		
+		clearProcessedState();
+		
 		//TODO: ajax should not be here. they should have their own function
 		
 		if($(this).attr('class') == 'dataFolder1'){
-			$.ajax({
-		        type: "GET",
-		        url: 'get_fp_to_template_assignment',
-		        data: {folderName: this.id},
-		        dataType: "json", 
-		    }).done(function(result){
-	        	if(result.error){
-		        	alert(result.error);
-		        	$("#graph_container").html("");
-		        	PROCESSING = false;
-		        	return false;
-	        	}
-	        	currentTab = main_navigate[0];	
-	        	currentData = result;
-	        	
-	        	
-	        	loadMainContent(currentTab);
-	        	
-
-		   		//display the screen
-		   		loadingSign(false);				   		
-		        console.log(result);	
-		        PROCESSING = false;	
-		        	        
-		        
-	        });
+			currentTab = main_navigate[0];	
+			loadMainContent(currentTab);
 			
 			
 		}else if($(this).attr('class') == 'dataFolder2'){
-			$.ajax({
-		        type: "GET",
-		        url: 'get_motif_pattern_data',
-		        data: {folderName: this.id},
-		        dataType: "json",
-			}).done(function(result){
-	        	if(result.error){
-		        	alert(result.error);
-		        	$("#graph_container").html("");
-		        	PROCESSING = false;
-		        	return false;
-	        	}
-	        	currentTab = main_navigate[1];
-	        	currentData = result;
-	        	loadMainContent(currentTab);
-		   		insertResult_2CellSelect();
-		   		insertResult_2Graph();
-		   		
-		   		//display the screen
-		   		loadingSign(false);				   		
-		        console.log(result);	
-		        PROCESSING = false;			        
-		        
-		    });
+			currentTab = main_navigate[1];
+			loadMainContent(currentTab);
 			
 		}
 		
@@ -191,7 +165,7 @@ function renewDataFolder(callback){
 		default sub index = 1
 */
 
-function loadMainContent(main_tab){
+function loadMainContent(main_tab, callback){
 	//clear content
 	$("#graph_container").html('');
 	$("#graph_nav").html('');
@@ -228,15 +202,28 @@ function loadMainContent(main_tab){
 		}
 		$("#graph_"+index+"_nav li ").removeClass('active');
 		$(this).parent().addClass('active');
-		$("#graph_container div").removeClass('show').addClass("hide");
+		$("#graph_container > div").removeClass('show').addClass("hide");
 		$("#graph_"+index+"_"+(subNavIndex+1)).removeClass("hide").addClass('show');
 
 		setTimeout( function() {
-			loadingSign(true);
-			sub_navigate[main_tab][subNavIndex].mainFunc("graph_"+index+"_"+(subNavIndex+1))
-			.done(function(){
-				loadingSign(false);
-			})
+			//only load the function if it hasn't been processeed  before
+			if(!sub_navigate['type_1'][subNavIndex].processed){
+			
+				PROCESSING = true;
+				loadingSign(true);
+				sub_navigate[main_tab][subNavIndex].mainFunc("graph_"+index+"_"+(subNavIndex+1))
+				.done(function(){
+					PROCESSING = false;
+					loadingSign(false);
+				}).fail(function(error_msg){
+					alert(error_msg);
+		        	$("#graph_container").html("");
+		        	PROCESSING = false;
+		        	loadingSign(false);	
+		        	return false;
+				});
+			}
+			
 
 		}, 200);
 	});
@@ -250,12 +237,21 @@ function loadMainContent(main_tab){
 		}
 	}
 	
-	//load the first graph
+	//load first graph
+	PROCESSING = true;
 	loadingSign(true);
 	sub_navigate[main_tab][0].mainFunc("graph_"+index+"_1")
 	.done(function(){
+		PROCESSING = false;
 		loadingSign(false);
-	})
+	}).fail(function(error_msg){
+		alert(error_msg);
+    	$("#graph_container").html("");
+    	PROCESSING = false;
+    	loadingSign(false);	
+    	return false;
+	});
+	
 }
 
 
@@ -531,12 +527,30 @@ function updateResult_2Graph(){
 
 
 /* Graphing Logic */
-function footprint_assignment_graph(div_id){
+
+//TAB1: 
+function footprint_assignment_graph(){
+
 	var deferred = new $.Deferred();
-
-	insertResult_1CellSelect();
-	insertResult_1Graph();
-
+	sub_navigate['type_1'][0].processed = true;
+	$.ajax({
+        type: "GET",
+        url: 'get_fp_to_template_assignment',
+        data: {folderName: selectedFolder},
+        dataType: "json", 
+    }).done(function(result){
+    	if(result.error){
+    		deferred.reject(result.error);
+    	}
+    	console.log(result);
+    	currentData = result;
+    	insertResult_1CellSelect();
+		insertResult_1Graph();
+					
+        deferred.resolve();
+    }).fail(function(e){
+		deferred.reject(e.statusText);
+    });
 	return deferred;
 	
 }
@@ -545,6 +559,7 @@ function footprint_assignment_graph(div_id){
 function correlation_overview_graph(div_id){
 	var cellTypeIndex = {};
 	var deferred = new $.Deferred();
+	sub_navigate['type_1'][1].processed = true;
 	$("#graph_container #"+div_id).append("<div id='celltypes_checkbox'><h4>Filter celltypes</h4></div><hr>");
 	$("#graph_container #"+div_id).append("<div id='corr' style='width:2500px; height:750px;'></div>");
 	
@@ -626,4 +641,32 @@ function correlation_overview_graph(div_id){
 	}, 300);
 	return deferred;
 
+}
+
+//TAB2:
+function motif_pattern_graph(){
+	var deferred = $.Deferred();
+	sub_navigate['type_2'][0].processed = true;
+
+	$.ajax({
+        type: "GET",
+        url: 'get_motif_pattern_data',
+        data: {folderName: selectedFolder},
+        dataType: "json",
+	})
+    .done(function(result){
+    	if(result.error){
+        	deferred.reject(result.error);
+    	}
+    	currentData = result;
+   		insertResult_2CellSelect();
+   		insertResult_2Graph();
+   		
+   		deferred.resolve();	        
+        
+    }).fail(function(e){
+		deferred.reject(e.statusText);
+    });
+    return deferred;
+	
 }
