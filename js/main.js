@@ -19,14 +19,18 @@ var sub_navigate = {
 		{
 			id:'fp_cons', 
 			name: 'Footprint vs. Conservation',
-			mainFunc: test
+			mainFunc: footprint_assignment_graph
 		},
 		{
 			id:'corr_overview', 
 			name: 'Correlation Overview',
-			mainFunc: correlation_overview
+			mainFunc: correlation_overview_graph
 		}]
 };
+
+//GROUP major ajax functions to its own function
+
+
 function test(){
 	console.log("test");
 }
@@ -44,7 +48,6 @@ $(document).ready(function(){
 
 /*
 	Side Panel Controller
-
 */
 function loadingSign(block){
 
@@ -74,7 +77,7 @@ function refreshSidePanel(data){
 		$(this).parent().addClass('active');
 		PROCESSING = true;
 		console.log(this.id);
-		
+		//TODO: ajax should not be here. they should have their own function
 		
 		if($(this).attr('class') == 'dataFolder1'){
 			$.ajax({
@@ -94,8 +97,7 @@ function refreshSidePanel(data){
 	        	
 	        	
 	        	loadMainContent(currentTab);
-	        	insertResult_1CellSelect();
-	        	insertResult_1Graph();
+	        	
 
 		   		//display the screen
 		   		loadingSign(false);				   		
@@ -199,7 +201,6 @@ function loadMainContent(main_tab){
 	navSelect = $("#graph_"+index+"_nav li.active a").attr('id');
 	
 	//bind click event to sub navigation
-	
 	$("#graph_"+index+"_nav li a").on('click', function(){
 		var subNavIndex = -1;
 		if(navSelect == this.id) return false;
@@ -233,6 +234,13 @@ function loadMainContent(main_tab){
 			$("#graph_container").append("<div id='graph_"+index+"_"+(i+1)+"' style='width:100%; '></div>");
 		}
 	}
+	
+	//load the first graph
+	loadingSign(true);
+	sub_navigate[main_tab][0].mainFunc("graph_"+index+"_1")
+	.done(function(){
+		loadingSign(false);
+	})
 }
 
 
@@ -508,8 +516,19 @@ function updateResult_2Graph(){
 
 
 /* Graphing Logic */
-function correlation_overview(div_id){
-	var cellTypeIndex;
+function footprint_assignment_graph(div_id){
+	var deferred = new $.Deferred();
+
+	insertResult_1CellSelect();
+	insertResult_1Graph();
+
+	return deferred;
+	
+}
+
+	
+function correlation_overview_graph(div_id){
+	var cellTypeIndex = {};
 	var deferred = new $.Deferred();
 	$("#graph_container #"+div_id).append("<div id='celltypes_checkbox'><h4>Filter celltypes</h4></div><hr>");
 	$("#graph_container #"+div_id).append("<div id='corr' style='width:2500px; height:750px;'></div>");
@@ -548,6 +567,7 @@ function correlation_overview(div_id){
 		
 		var i=0;
 		$.each(currentData.data, function(key, val){
+	if(i<1){
 			console.log(key);
 			cellTypeIndex[key] = i;
 			var series = {
@@ -565,11 +585,12 @@ function correlation_overview(div_id){
 			corr_chart.addSeries(series);
 			
 			$("#"+div_id+" #celltypes_checkbox").append("<label class='checkbox inline'><input type='checkbox' class='checkbox' checked id='"+key+"'>"+key+"</label>");
+		}
 			i++;
 		});
 	
 		//bind clck events to these checkboxes
-		$("#"+div_id+" #celltypes_checkbox .checkbox").on('change', function() {
+		/*$("#"+div_id+" #celltypes_checkbox .checkbox").on('change', function() {
 			var checked = ($(this).is(':checked')) ? true : false;
 			var index = cellTypeIndex[this.id];
 			if(checked){
@@ -580,7 +601,7 @@ function correlation_overview(div_id){
 			}
 			//alert(checked);
 		});
-		
+		*/
 		
 		//loadingSign(false);
 		//DONE:
