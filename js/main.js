@@ -451,6 +451,7 @@ function insertResult_2_2CellSelect(){
 		
 		currentMotif = $(this).val();
 		loadingSign(true, currentMotif);
+		
 		updateResult_2_2Graph();
 		loadingSign(false);
 		
@@ -460,47 +461,64 @@ function insertResult_2_2CellSelect(){
 	
 }
 function insertResult_2_2Graph(){
-	//push 100 graph containers first
-	for(var i=0; i<currentData.celltypes.length; i++){
 
-		$("#graph_container #graph_2_2").append("<h5 id='graph_2_2_name_"+i+"' >Cell: <span></span></h3>");
-		$("#graph_container #graph_2_2").append("<h5 id='graph_2_2_corr_"+i+"'>Correlation: <span></span></h3>");
-		$("#graph_container #graph_2_2").append("<div id='graph_2_2_motif_"+i+"' style='width:100%; height:300px; float=left;'></div>");
+	$("#graph_container #graph_2_2").append("<h5 id='graph_2_2_motif_name' >Motif: <span></span></h3>");
+	$("#graph_container #graph_2_2").append("<div id='graph_2_2_signal' style='width:100%; height:450px; float=left;'></div><br><br>"); 
 	
-		$("#graph_container #graph_2_2").append("<div id='clear_float'><hr id='graph_hr_"+i+"'>");
-	
-		var c = get_chart('graph_2_2_motif_'+i, "test", 'centroidWindow', true);
-		
-		chart2.push(c);
-	}
-	loadingSign(true, currentMotif);
+	$("#graph_container #graph_2_2").append("<div id='graph_2_2_corr' style='width:100%; height:450px; float=left;'></div>"); 
+	chart2.push(get_chart("graph_2_2_signal", "Comparison of signal ", "centroidWindow", false));
+	chart2.push(get_chart("graph_2_2_corr", "comparison of correlation", "centroidWindow", false));
+	//loadingSign(true, currentMotif);
 	updateResult_2_2Graph();
-	loadingSign(false);
+	//loadingSign(false);
 	
 }
 
 function updateResult_2_2Graph(){
 	
 	console.log("update graph to "+currentMotif);
-	for(var i=0; i<currentData.data[currentMotif].length; i++){
 	
-		var fpData = [];
-		var conData = [];
-		$.each(currentData.data[currentMotif][i].fpSignal, function(key,val){
-			fpData.push(parseFloat(val));
+	while(chart2[0].series.length > 0)
+		chart2[0].series[0].remove(true);
+	while(chart2[1].series.length > 0)
+		chart2[1].series[0].remove(true);
+	
+	for(var i=0; i<currentData.data[currentMotif].length; i++){
+
+		var series = {
+			lineWidth: 1,
+	        id: 'series',
+	        name: currentData.data[currentMotif][i].celltype,
+	        data: [],
+	        marker: {radius:2}
+	        }
+	    $.each(currentData.data[currentMotif][i].fpSignal, function(key,val){
+			series.data.push(parseFloat(val));
 
 		});
-		$.each(currentData.data[currentMotif][i].conservationLevel, function(key,val){
-			conData.push(parseFloat(val));
-		});
-
-		chart2[i].series[0].setData(fpData);
-		chart2[i].series[1].setData(conData);
+		//update signal
 		
-		$("#graph_container #graph_2_2_name_"+i+" span").html(currentData.data[currentMotif][i].celltype);
-		$("#graph_container #graph_2_2_corr_"+i+" span").html(currentData.data[currentMotif][i].correlation);
+		chart2[0].addSeries(series,false);
+		
+		
+		series.data = [];
+		$.each(currentData.data[currentMotif][i].conservationLevel, function(key,val){
+			series.data.push(parseFloat(val));
+
+		});
+		
+		//update corr
+		
+		chart2[1].addSeries(series,false);
+
+		$("#graph_container #graph_2_2_motif_name span").html(currentMotif);
+		
+		
 		
 	}
+	chart2[0].redraw();
+	chart2[1].redraw();
+	
 	//loadingSign(false);
 }
 
@@ -563,7 +581,7 @@ function correlation_overview_graph(div_id){
 	
 			});
 		
-			corr_chart.addSeries(series);
+			corr_chart.addSeries(series,false);
 			
 			$("#"+div_id+" #celltypes_checkbox").append("<label class='checkbox inline'><input type='checkbox' class='checkbox' checked id='"+key+"'>"+key+"</label>");
 		
@@ -571,6 +589,7 @@ function correlation_overview_graph(div_id){
 		
 			
 		});
+		corr_chart.redraw();
 	
 		//bind clck events to these checkboxes
 		$("#"+div_id+" #celltypes_checkbox .checkbox").on('change', function() {

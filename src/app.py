@@ -31,12 +31,13 @@ class DataVisual:
 	#os.path.isdir(fileordirectoryname)
 	
 		type1_folders = []
-		for (dirpath, dirnames, filenames) in walk('data/type1'):
+		for (dirpath, dirnames, filenames) in walk('json_data/type1'):
+			#print filenames
 		    type1_folders.extend(dirnames)
 		    break
 		    
 		type2_folders = []
-		for (dirpath, dirnames, filenames) in walk('data/type2'):
+		for (dirpath, dirnames, filenames) in walk('json_data/type2'):
 		    type2_folders.extend(dirnames)
 		    break    
 		    
@@ -46,7 +47,7 @@ class DataVisual:
 	#result 1 shows the template assignment
 	@cherrypy.expose()
 	def get_fp_to_template_assignment(self, folderName):
-		json_file=open('json_data/type1/'+folderName+'.json')
+		json_file=open('json_data/type1/'+folderName+'/'+folderName+'.json')
 		json_data = simplejson.load(json_file)
 		return simplejson.dumps(json_data)
 		

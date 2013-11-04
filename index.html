@@ -24,7 +24,7 @@
 
 <body>
 
-	<div class="navbar navbar-inverse navbar-fixed-top">
+	<div class="navbar navbar-inverse navbar-static-top">
       <div class="navbar-inner">
         <div class="container-fluid">
           <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -36,7 +36,21 @@
           <div class="nav-collapse collapse">
 
             <ul class="nav">
-              <li class="active"><a href="#">Home</a></li>
+             
+              
+				<li class="dropdown">
+					<a class="dropdown-toggle" data-toggle="dropdown" href="#">Select Data<b class="caret"></b></a>
+					<ul id='side_panel' class="dropdown-menu">
+						<!-- links -->
+						<li class="nav-header">FP Assignment</li>
+					  <li><a href="#">link1</a></li>
+	                  <li><a href="#">link2</a></li>
+					  <li class="nav-header">Motif Assignment</li>
+					   <li><a href="#">link1</a></li>
+					</ul>
+				</li>
+				
+		
               <!--<li><a href="#about">About</a></li>
               <li><a href="#contact">Contact</a></li>!-->
             </ul>
@@ -45,37 +59,15 @@
       </div>
     </div>
 
-    <div class="container-fluid">
-    	
-      <div class="row-fluid">
-        <div class="span2">
-          <div class="well sidebar-nav">
-            <ul id="side_panel" class="nav nav-list">
-              <li class="nav-header">fp Assignment</li>
-              <li class="active"><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li class="nav-header">motif assignment</li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-
-            </ul>
-          </div><!--/.well -->
-        </div><!--/span-->
-        
-        <div class="span10">
+    <div id="main_wrapper" class="container-fluid">
+           <div class="span12">
     		<div id="graph_nav" >
     		</div>
     	</div>
     	
     	
     	
-        <div class="span10">
+        <div class="span12">
           <div id="graph_container" class="hero-unit">
           
             <!--<h1>Hello, world!</h1>

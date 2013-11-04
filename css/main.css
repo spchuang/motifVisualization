@@ -1,6 +1,5 @@
 body {
-padding-top: 60px;
-padding-bottom: 40px;
+
 }
 .sidebar-nav {
 padding: 9px 0;
@@ -27,4 +26,14 @@ padding: 9px 0;
 
 .show{
 	display:block;
+}
+
+
+#graph_container{
+	padding:20px;
+}
+
+#main_wrapper{
+	margin-top: 10px;
+	padding: 0 10px;
 }
