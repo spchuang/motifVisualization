@@ -1,4 +1,4 @@
-var type1_folder, type2_folder;
+var type1_folder, type2_folder, type3_folder;
 var currentData;
 var currentCell;
 
@@ -18,7 +18,7 @@ var centroidWindow = ['1','2','3','4','5','6','7','8','9','10','11','12','13','1
 var template = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,100]
 */
 var centroidNubmer = 100;
-var motifNumber = 498;
+var motifNumber = 10;
 var PROCESSING = false;
 var navSelect = -1;
 
@@ -26,7 +26,7 @@ var currentTab = null;
 var selectedFolder = null;
 //type_1 is fp pattern
 //type_2 is motif pattern
-var main_navigate = ['type_1', 'type_2'];
+var main_navigate = ['type_1', 'type_2', 'type_3'];
 var sub_navigate = {
 	'type_1':[
 		{
@@ -47,14 +47,16 @@ var sub_navigate = {
 			name: 'Motif for each celltypes',
 			mainFunc: motif_pattern_graph,
 			processed: false
-		},
+		}],
+	'type_3' :[
 		{
 			id:'motif_across_cell',
 			name: 'Motif across celltypes',
 			mainFunc: motif_pattern_across_celltypes_graph,
 			processed: false
 			
-		}]
+		}
+	]
 };
 
 //GROUP major ajax functions to its own function
@@ -108,7 +110,10 @@ function refreshSidePanel(data){
 	$("#side_panel").append("<li class='nav-header'>motif assignment</li>");
 	for(var i in type2_folder){
 		$("#side_panel").append("<li><a class='dataFolder2' href='#' id='"+type2_folder[i]+"'>"+type2_folder[i]+"</a></li>");
-		
+	}
+	$("#side_panel").append("<li class='nav-header'>motif across cells</li>");
+	for(var i in type3_folder){
+		$("#side_panel").append("<li><a class='dataFolder3' href='#' id='"+type3_folder[i]+"'>"+type3_folder[i]+"</a></li>");
 	}
 	//dynamically bind click event trigger
 	$("#side_panel li a").on('click', function(){
@@ -130,6 +135,9 @@ function refreshSidePanel(data){
 			currentTab = main_navigate[1];
 			loadMainContent(currentTab);
 			
+		}else if($(this).attr('class') == 'dataFolder3'){
+			currentTab = main_navigate[2];
+			loadMainContent(currentTab);
 		}
 		
 		return false;
@@ -146,6 +154,7 @@ function renewDataFolder(callback){
     }).done(function(result) {
     	type1_folder = [];
     	type2_folder = [];
+    	type3_folder = [];
 
 		console.log(result);
 		for(var i=0; i<result.type1_folders.length;i++){
@@ -153,6 +162,9 @@ function renewDataFolder(callback){
 		}
 		for(var i=0; i<result.type2_folders.length;i++){
 			type2_folder.push(result.type2_folders[i]);
+		}
+		for(var i=0; i<result.type3_folders.length;i++){
+			type3_folder.push(result.type3_folders[i]);
 		}
 		
 		refreshSidePanel();
@@ -180,9 +192,10 @@ function loadMainContent(main_tab, callback){
 	chart2 = [];
 	
 	//get main content id
-	var index=-1;
-	if(main_tab === 'type_1') index = 1;
+	var index = parseInt(main_tab.split("_")[1]);
+	/*if(main_tab === 'type_1') index = 1;
 	else if(main_tab=== 'type_2') index = 2;
+	else if(main_tab=== 'type_3') index=3;*/
 	
 	//load sub navigation
 	var list = ""
@@ -248,6 +261,8 @@ function loadMainContent(main_tab, callback){
 	//load first graph
 	PROCESSING = true;
 	loadingSign(true);
+	console.log(main_tab);
+	
 	sub_navigate[main_tab][0].mainFunc("graph_"+index+"_1")
 	.done(function(){
 		PROCESSING = false;
@@ -436,23 +451,23 @@ function updateResult_2Graph(){
 
 //Compare motifs across different celltypes
 var currentMotif;
-function insertResult_2_2CellSelect(){
+function insertResult_3CellSelect(){
 	
 	//put new select options
-	$("#graph_container #graph_2_2").append("<label>pick a Motif Name</label><select id='select-motif'>");
+	$("#graph_container #graph_3_1").append("<label>pick a Motif Name</label><select id='select-motif'>");
 	$.each(currentData.motifs, function(k,v) {
 	
-		$("#graph_container #graph_2_2 #select-motif").append("<option id='"+v+"'>"+v+"</option>");
+		$("#graph_container #graph_3_1 #select-motif").append("<option id='"+v+"'>"+v+"</option>");
 	});
-	$("#graph_container #graph_2_2").append("</select>");
+	$("#graph_container #graph_3_1").append("</select>");
 	//$("#graph_container #graph_2_2").append("<label>correlation filter</label><input id='filter-corr' type='textbox'></input>");
 	
-	$("#graph_container #graph_2_2 #select-motif").on("change", function(){
+	$("#graph_container #graph_3_1 #select-motif").on("change", function(){
 		
 		currentMotif = $(this).val();
 		loadingSign(true, currentMotif);
 		
-		updateResult_2_2Graph();
+		updateResult_3Graph();
 		loadingSign(false);
 		
 	});
@@ -460,22 +475,24 @@ function insertResult_2_2CellSelect(){
 
 	
 }
-function insertResult_2_2Graph(){
+function insertResult_3Graph(){
 
-	$("#graph_container #graph_2_2").append("<h5 id='graph_2_2_motif_name' >Motif: <span></span></h3>");
-	$("#graph_container #graph_2_2").append("<div id='graph_2_2_signal' style='width:100%; height:450px; float=left;'></div><br><br>"); 
+	$("#graph_container #graph_3_1").append("<h5 id='graph_3_motif_name' >Motif: <span></span></h3>");
+	$("#graph_container #graph_3_1").append("<div id='graph_3_signal' style='width:100%; height:450px; float=left;'></div><br><br>"); 
 	
-	$("#graph_container #graph_2_2").append("<div id='graph_2_2_corr' style='width:100%; height:450px; float=left;'></div>"); 
-	chart2.push(get_chart("graph_2_2_signal", "Comparison of signal ", "centroidWindow", false));
-	chart2.push(get_chart("graph_2_2_corr", "comparison of correlation", "centroidWindow", false));
+	$("#graph_container #graph_3_1").append("<div id='graph_3_corr' style='width:100%; height:450px; float=left;'></div>");
+	 
+	console.log("LOADING");
+	chart2.push(get_chart("graph_3_signal", "Comparison of signal ", "centroidWindow", false));
+	chart2.push(get_chart("graph_3_corr", "comparison of correlation", "centroidWindow", false));
 	//loadingSign(true, currentMotif);
-	updateResult_2_2Graph();
+	updateResult_3Graph();
 	//loadingSign(false);
 	
 }
 
-function updateResult_2_2Graph(){
-	
+function updateResult_3Graph(){
+	console.log(currentData);
 	console.log("update graph to "+currentMotif);
 	
 	while(chart2[0].series.length > 0)
@@ -511,7 +528,7 @@ function updateResult_2_2Graph(){
 		
 		chart2[1].addSeries(series,false);
 
-		$("#graph_container #graph_2_2_motif_name span").html(currentMotif);
+		$("#graph_container #graph_3_motif_name span").html(currentMotif);
 		
 		
 		
@@ -645,7 +662,7 @@ function motif_pattern_graph(){
 
 function motif_pattern_across_celltypes_graph(){
 	var deferred = $.Deferred();
-	sub_navigate['type_2'][1].processed = true;
+	sub_navigate['type_3'][0].processed = true;
 
 	$.ajax({
         type: "GET",
@@ -658,8 +675,8 @@ function motif_pattern_across_celltypes_graph(){
         	deferred.reject(result.error);
     	}
     	currentData = result;
-		insertResult_2_2CellSelect();
-		insertResult_2_2Graph();
+		insertResult_3CellSelect();
+		insertResult_3Graph();
     	/*currentData = result;
    		insertResult_2CellSelect();
    		insertResult_2Graph();

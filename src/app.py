@@ -39,9 +39,14 @@ class DataVisual:
 		type2_folders = []
 		for (dirpath, dirnames, filenames) in walk('json_data/type2'):
 		    type2_folders.extend(dirnames)
-		    break    
+		    break   
+		
+		type3_folders = []
+		for (dirpath, dirnames, filenames) in walk('json_data/type3'):
+		    type3_folders.extend(dirnames)
+		    break     
 		    
-		return simplejson.dumps(dict(type1_folders=type1_folders, type2_folders=type2_folders))
+		return simplejson.dumps(dict(type1_folders=type1_folders, type2_folders=type2_folders, type3_folders=type3_folders))
 		
 		
 	#result 1 shows the template assignment
@@ -63,7 +68,7 @@ class DataVisual:
 	@cherrypy.expose()
 	def get_motif_pattern_across_cell(self, folderName):
 
-		json_file=open('json_data/type2/'+folderName+'/'+folderName+'_across_motifs.json')
+		json_file=open('json_data/type3/'+folderName+'/'+folderName+'.json')
 		json_data = simplejson.load(json_file)
 		return simplejson.dumps(json_data)
     

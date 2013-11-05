@@ -68,7 +68,7 @@ def convert_motifdata_to_motif_based():
 	result['motifs'].sort()
 	print result['motifs']
 
-	with open("../json_data/type2/"+file_name+'/'+file_name+'_across_motifs.json', 'w') as outfile:
+	with open("../json_data/type3/"+file_name+'/'+file_name+'.json', 'w') as outfile:
 		simplejson.dump(result, outfile)
 		
 	
