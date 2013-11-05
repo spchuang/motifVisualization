@@ -51,6 +51,7 @@ class DataVisual:
 		
 	#result 1 shows the template assignment
 	@cherrypy.expose()
+	@cherrypy.tools.gzip()
 	def get_fp_to_template_assignment(self, folderName):
 		json_file=open('json_data/type1/'+folderName+'/'+folderName+'.json')
 		json_data = simplejson.load(json_file)
@@ -58,6 +59,7 @@ class DataVisual:
 		
 	#result 2 shows the motif pattern (super similar to func for result 1 lol)
 	@cherrypy.expose()
+	@cherrypy.tools.gzip()
 	def get_motif_pattern_data(self, folderName):
 
 		json_file=open('json_data/type2/'+folderName+'/'+folderName+'.json')
@@ -66,6 +68,7 @@ class DataVisual:
 		
 	#result 3 shows the motif pattern that is motif-based
 	@cherrypy.expose()
+	@cherrypy.tools.gzip()
 	def get_motif_pattern_across_cell(self, folderName):
 
 		json_file=open('json_data/type3/'+folderName+'/'+folderName+'.json')

@@ -549,6 +549,7 @@ function footprint_assignment_graph(){
 	$.ajax({
         type: "GET",
         url: 'get_fp_to_template_assignment',
+         headers: { "Accept-Encoding" : "gzip" },
         data: {folderName: selectedFolder},
         dataType: "json", 
     }).done(function(result){
@@ -640,6 +641,7 @@ function motif_pattern_graph(){
 	$.ajax({
         type: "GET",
         url: 'get_motif_pattern_data',
+         headers: { "Accept-Encoding" : "gzip" },
         data: {folderName: selectedFolder},
         dataType: "json",
 	})
@@ -667,6 +669,7 @@ function motif_pattern_across_celltypes_graph(){
 	$.ajax({
         type: "GET",
         url: 'get_motif_pattern_across_cell',
+        headers: { "Accept-Encoding" : "gzip" },
         data: {folderName: selectedFolder},
         dataType: "json",
 	})
