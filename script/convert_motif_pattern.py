@@ -15,7 +15,7 @@ import simplejson
 			/motifOrder.txt
 '''
 def convert_motif_pattern():
-	folderName = 'test_motif_pattern9-20'
+	folderName = 'average_chr1_chr7'
 	folderPath = '../data/type2/'+folderName;
 	celltypes = []
 	for (dirpath, dirnames, filenames) in walk(folderPath):
@@ -75,16 +75,16 @@ def convert_motif_pattern():
 				consData = []
 		
 		#read correlation
-		corrFile = open(folderPath+'/'+c+'/cor-level.txt')
-		for line in corrFile:	
-			try:
-				result['data'][c]['correlation'].append(float(line))
-
-			except ValueError:
-				print "no"
+#		corrFile = open(folderPath+'/'+c+'/consSig')
+#		for line in corrFile:	
+#			try:
+#				result['data'][c]['correlation'].append(float(line))
+#
+#			except ValueError:
+#				print "no"
 		
 		#read count
-		countFile = open(folderPath+'/'+c+'/motifOrder.txt')
+		countFile = open(folderPath+'/'+c+'/motifOrder')
 		for line in countFile:	
 			if not line[0] == 'T':
 				r = re.search('^[0-9]* : (.+)\(([0-9]*)\)',line)

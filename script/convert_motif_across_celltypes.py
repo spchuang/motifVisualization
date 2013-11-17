@@ -12,7 +12,7 @@ import simplejson
 '''
 
 def convert_motifdata_to_motif_based():
-	file_name = "test_motif_pattern9-20"
+	file_name = "average_chr1_chr7"
 	json_file=open('../json_data/type2/'+file_name+'/'+file_name+'.json')
 	json_data = simplejson.load(json_file)
 	
@@ -59,7 +59,7 @@ def convert_motifdata_to_motif_based():
 			data['celltype']			= c
 			data['fpSignal'] 			= motif_data[c]['fpSignal'][i]['data']
 			data['conservationLevel'] 	= motif_data[c]['conservationLevel'][i]['data']
-			data['correlation'] 		= motif_data[c]['correlation'][i]
+#			data['correlation'] 		= motif_data[c]['correlation'][i]
 			data['count']				= motif_count
 			
 			result['data'][motif_name].append(data)
